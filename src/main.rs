@@ -164,6 +164,7 @@ fn cli(argv: &[String]) -> Result<String, String> {
         Some("status") | None => Ok(format!("Mastodon\n  instance: {}\n  token: {}",
             cfg("instance","MASTODON_INSTANCE").unwrap_or("MISSING".into()),
             if cfg("token","MASTODON_TOKEN").is_some() { "set" } else { "MISSING" })),
+        Some("-h" | "--help" | "help") => Ok("usage: mastodon setup | status".into()),
         Some(o) => Err(format!("unknown verb {o}")),
     }
 }
