@@ -56,7 +56,7 @@ fn api(method: &str, path: &str, body: Option<&Value>) -> Result<Value, String> 
         .ok_or("no instance — `mastodon setup --instance mastodon.social --token …`")?;
     let tok = cfg("token", "MASTODON_TOKEN").ok_or("no token configured")?;
     let url = format!("{}/api/v1{}", inst.trim_end_matches('/'), path);
-    let mut req = match method { "GET" => ureq::get(&url), _ => ureq::post(&url) }
+    let req = match method { "GET" => ureq::get(&url), _ => ureq::post(&url) }
         .timeout(std::time::Duration::from_secs(20))
         .set("Authorization", &format!("Bearer {tok}"));
     let resp = match body {
@@ -127,8 +127,11 @@ fn tool(name: &str, args: &Value) -> Value {
             let q = args["query"].as_str().unwrap_or("");
             let n = args["limit"].as_u64().unwrap_or(10).min(40);
             api("GET", &format!("/search?q={}&limit={n}&resolve=true",
-                q.chars().map(|c| if c.is_alphanumeric() { c.to_string() }
-                    else { format!("%{:02X}", c as u32) }).collect::<String>()), None)
+                q.as_bytes().iter().map(|b| match b {
+                    b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~'
+                        => (*b as char).to_string(),
+                    _ => format!("%{b:02X}"),
+                }).collect::<String>()), None)
                 .map(|v| {
                     v["statuses"].as_array().cloned().unwrap_or_default().iter()
                         .map(fmt_status).collect::<Vec<_>>().join("\n\n")
