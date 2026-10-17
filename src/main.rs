@@ -113,9 +113,12 @@ fn tool(name: &str, args: &Value) -> Value {
         "mastodon_timeline" => {
             let scope = args["scope"].as_str().unwrap_or("home");
             let n = args["limit"].as_u64().unwrap_or(15).min(40);
-            let path = match scope { "local" => "/timelines/public?local=true",
-                "public" => "/timelines/public", _ => "/timelines/home" };
-            api("GET", &format!("{path}&limit={n}"), None).map(|v| {
+            let path = match scope {
+                "local" => format!("/timelines/public?local=true&limit={n}"),
+                "public" => format!("/timelines/public?limit={n}"),
+                _ => format!("/timelines/home?limit={n}"),
+            };
+            api("GET", &path, None).map(|v| {
                 v.as_array().cloned().unwrap_or_default().iter()
                     .map(fmt_status).collect::<Vec<_>>().join("\n\n")
             })
