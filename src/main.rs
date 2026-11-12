@@ -12,21 +12,21 @@ fn manifest() -> Value {
         "name": NAME, "display_name": "Mastodon",
         "version": env!("CARGO_PKG_VERSION"), "protocol": "1.1",
         "tools": [
-            {"name": "mastodon_post",
+            {"name": "mastodon_post", "label": "Posted", "preview": "{visibility}\n{text|firstline}",
              "description": "Post a status. visibility: public|unlisted|private|direct (default unlisted).",
              "parameters": {"type": "object", "properties": {
                 "text": {"type": "string"}, "visibility": {"type": "string"},
                 "reply_to": {"type": "string", "description": "status id to reply to"},
                 "spoiler": {"type": "string"}}, "required": ["text"]}},
-            {"name": "mastodon_notifications",
+            {"name": "mastodon_notifications", "label": "Mastodon notifications",
              "description": "Recent notifications (mentions, boosts, favs, follows).",
              "parameters": {"type": "object", "properties": {
                 "limit": {"type": "integer"}}}},
-            {"name": "mastodon_timeline",
+            {"name": "mastodon_timeline", "label": "Mastodon timeline", "preview": "{scope}",
              "description": "Read a timeline: home|local|public (default home).",
              "parameters": {"type": "object", "properties": {
                 "scope": {"type": "string"}, "limit": {"type": "integer"}}}},
-            {"name": "mastodon_search",
+            {"name": "mastodon_search", "label": "Mastodon search", "preview": "{query}",
              "description": "Search statuses/accounts/hashtags.",
              "parameters": {"type": "object", "properties": {
                 "query": {"type": "string"}, "limit": {"type": "integer"}},
