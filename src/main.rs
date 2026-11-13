@@ -33,6 +33,7 @@ fn manifest() -> Value {
              "required": ["query"]}},
         ],
         "commands": ["/mastodon"], "subcommands": ["mastodon"],
+        "command_descriptions": {"/mastodon": "Mastodon bridge: post and read"},
     })
 }
 
