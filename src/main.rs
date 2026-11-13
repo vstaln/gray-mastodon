@@ -12,27 +12,28 @@ fn manifest() -> Value {
         "name": NAME, "display_name": "Mastodon",
         "version": env!("CARGO_PKG_VERSION"), "protocol": "1.1",
         "tools": [
-            {"name": "mastodon_post",
+            {"name": "mastodon_post", "label": "Posted", "preview": "{visibility}\n{text|firstline}",
              "description": "Post a status. visibility: public|unlisted|private|direct (default unlisted).",
              "parameters": {"type": "object", "properties": {
                 "text": {"type": "string"}, "visibility": {"type": "string"},
                 "reply_to": {"type": "string", "description": "status id to reply to"},
                 "spoiler": {"type": "string"}}, "required": ["text"]}},
-            {"name": "mastodon_notifications",
+            {"name": "mastodon_notifications", "label": "Mastodon notifications",
              "description": "Recent notifications (mentions, boosts, favs, follows).",
              "parameters": {"type": "object", "properties": {
                 "limit": {"type": "integer"}}}},
-            {"name": "mastodon_timeline",
+            {"name": "mastodon_timeline", "label": "Mastodon timeline", "preview": "{scope}",
              "description": "Read a timeline: home|local|public (default home).",
              "parameters": {"type": "object", "properties": {
                 "scope": {"type": "string"}, "limit": {"type": "integer"}}}},
-            {"name": "mastodon_search",
+            {"name": "mastodon_search", "label": "Mastodon search", "preview": "{query}",
              "description": "Search statuses/accounts/hashtags.",
              "parameters": {"type": "object", "properties": {
                 "query": {"type": "string"}, "limit": {"type": "integer"}},
              "required": ["query"]}},
         ],
         "commands": ["/mastodon"], "subcommands": ["mastodon"],
+        "command_descriptions": {"/mastodon": "Mastodon bridge: post and read"},
     })
 }
 
@@ -154,11 +155,11 @@ fn tool(name: &str, args: &Value) -> Value {
             let scope = args["scope"].as_str().unwrap_or("home");
             let n = args["limit"].as_u64().unwrap_or(15).min(40);
             let path = match scope {
-                "local" => "/timelines/public?local=true",
-                "public" => "/timelines/public",
-                _ => "/timelines/home",
+                "local" => format!("/timelines/public?local=true&limit={n}"),
+                "public" => format!("/timelines/public?limit={n}"),
+                _ => format!("/timelines/home?limit={n}"),
             };
-            api("GET", &format!("{path}&limit={n}"), None).map(|v| {
+            api("GET", &path, None).map(|v| {
                 v.as_array()
                     .cloned()
                     .unwrap_or_default()
@@ -175,11 +176,12 @@ fn tool(name: &str, args: &Value) -> Value {
                 "GET",
                 &format!(
                     "/search?q={}&limit={n}&resolve=true",
-                    q.chars()
-                        .map(|c| if c.is_alphanumeric() {
-                            c.to_string()
-                        } else {
-                            format!("%{:02X}", c as u32)
+                    q.as_bytes()
+                        .iter()
+                        .map(|b| match b {
+                            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' =>
+                                (*b as char).to_string(),
+                            _ => format!("%{b:02X}"),
                         })
                         .collect::<String>()
                 ),
